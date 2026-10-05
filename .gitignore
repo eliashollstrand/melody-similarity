@@ -1,0 +1,32 @@
+# Data
+data/*
+!data/.gitkeep
+
+# Generated outputs
+results/*
+!results/.gitkeep
+*.pkl
+*.npy
+*.npz
+
+# CLaMP 2 code, weights and features
+clamp2/
+*.pth
+*.pt
+*.bin
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
