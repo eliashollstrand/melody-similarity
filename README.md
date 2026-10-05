@@ -43,29 +43,73 @@ melody-similarity/
 ## Shared formats
 
 Everyone codes against these, so the parts can be built in parallel.
+If you need to change a format, update this section and tell the group.
 
-**Melody IDs:** the MTC-ANN `songid`, i.e. the MIDI file name without extension, e.g. `NLB072638_01`.
+### Pipeline
 
-**Tune-family labels:** a dictionary `{songid: tunefamily}`.
+    data_loading.py      →  melodies, families
+    representations.py   →  representations
+    distances.py         →  similarity matrices (results/*.npz)
+    clamp_embeddings.py  →  similarity matrix  (results/clamp2_cosine.npz)
+    evaluation.py        →  MAP per method
 
-**Representations:** one dictionary per representation, `{songid: sequence}`:
+### 1. Loaded melodies (output of `data_loading.py`)
 
-| Name | Example element | Example sequence |
+`load_melodies(mtc_root) -> dict`
+
+    {songid: [(onset, duration, pitch), ...]}
+
+- `songid`: MIDI file name without extension, e.g. `"NLB072638_01"`
+- `onset`, `duration`: in quarter notes (from the score, independent of MIDI tempo)
+- `pitch`: MIDI note number (60 = middle C)
+- notes sorted by onset, one note at a time (monophonic)
+
+Example (Twinkle Twinkle, first phrase):
+
+    [(0, 1, 60), (1, 1, 60), (2, 1, 67), (3, 1, 67), (4, 1, 69), (5, 1, 69), (6, 2, 67)]
+
+### 2. Tune-family labels (output of `data_loading.py`)
+
+`load_tune_families(mtc_root) -> dict`
+
+    {songid: tunefamily}
+
+### 3. Representations (output of `representations.py`)
+
+`build_representations(melodies) -> dict`
+
+    {representation_name: {songid: sequence}}
+
+| Name | Element | Example sequence |
 |---|---|---|
 | `pitch` | MIDI note number | `[60, 60, 67, 67, 69, 69, 67]` |
 | `interval` | semitone step | `[0, 7, 0, 2, 0, -2]` |
 | `contour` | -1 / 0 / +1 | `[0, 1, 0, 1, 0, -1]` |
-| `pitch+dur`, `interval+dur`, `contour+dur` | `(value, duration)` | `[(0, 1.0), (7, 1.0), ...]` |
+| `pitch+dur`, `interval+dur`, `contour+dur` | `(value, duration)` | `[(0, 1), (7, 1), ...]` |
 
-Durations are in quarter notes, measured from one note's start to the next note's start.
+### 4. Similarity matrices (output of `distances.py` and `clamp_embeddings.py`)
 
-**Similarity matrices:** an N × N NumPy array saved as `.npy` (higher = more similar), together with the list of melody IDs in the same row/column order. Save to `results/`, named after the method, e.g. `interval_edit.npy`, `clamp2_cosine.npy`.
+One `.npz` file per method in `results/`, named after the method
+(e.g. `interval_edit.npz`, `clamp2_cosine.npz`), containing:
+
+- `sim`: N × N NumPy array, higher = more similar
+- `ids`: the songids in the same row/column order 
+
+```python
+np.savez("results/interval_edit.npz", sim=S, ids=np.array(ids))
+```
 
 ## Setup
 
 ### Python
 
 Python 3.10 or newer. Main packages: `numpy`, `pandas`, `pretty_midi`, `librosa` (for DTW), `matplotlib`.
+
+It is recommended to use a virtual environment. From the repo root:
+
+    python3 -m venv .venv
+    source .venv/bin/activate   # Windows: .venv\Scripts\activate
+    pip install numpy pandas pretty_midi librosa matplotlib
 
 ### MTC-ANN
 
