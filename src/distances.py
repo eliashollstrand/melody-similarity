@@ -40,7 +40,7 @@ def cost(x, y):
     """Cost between two sequence elements."""
     if isinstance(x, tuple):
         # If there are durations, add together the value and duration differences
-        return abs(x[0] - y[0]) - abs(x[1] - y[1])
+        return abs(x[0] - y[0]) + abs(x[1] - y[1])
     return abs(x - y)
 
 
