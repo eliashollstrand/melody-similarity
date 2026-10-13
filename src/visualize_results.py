@@ -9,8 +9,13 @@ Outputs (in --out_dir):
     <method>_ap_family.png  average precision per query, grouped by family
     <method>_ap.csv         average precision per query (for later analysis)
 
+With --exclude_same_recording, results that come from the same recording as
+the query (other strophes, same NLB number) are removed from each ranking,
+and output files get the suffix "_norec" (e.g. <method>_norec_ap.csv).
+
 Usage:
     python src/visualize_results.py --sim results/clamp2_cosine.npz --mtc_root data/MTC-ANN-2.0.1
+    python src/visualize_results.py --sim results/clamp2_cosine.npz --exclude_same_recording
 """
 from pathlib import Path
 import argparse
@@ -39,21 +44,44 @@ def load_families(mtc_root):
     return families
 
 
-def average_precision(sim, labels):
-    """AP per query: rank all other melodies, relevant = same tune family."""
+def recording_id(songid):
+    """Recording number without the strophe suffix: NLB072355_12 -> NLB072355."""
+    return songid.rsplit("_", 1)[0]
+
+
+def average_precision(sim, labels, groups=None):
+    """AP per query: rank all other melodies, relevant = same tune family.
+
+    If groups is given (one recording id per melody), candidates from the
+    query's own recording are removed from its ranking.
+    """
     n = len(labels)
     ap = np.zeros(n)
     for i in range(n):
         order = np.argsort(-sim[i], kind="stable")
-        order = order[order != i]  # the query itself is not a result
+        keep = order != i  # the query itself is not a result
+        if groups is not None:
+            keep &= groups[order] != groups[i]  # nor are its sibling strophes
+        order = order[keep]
         relevant = labels[order] == labels[i]
         if relevant.sum() == 0:
             ap[i] = np.nan
             continue
         hits = np.cumsum(relevant)
-        precision_at_k = hits / np.arange(1, n)
+        precision_at_k = hits / np.arange(1, len(order) + 1)
         ap[i] = precision_at_k[relevant].mean()
     return ap
+
+
+def report_same_recording(ids, labels, groups):
+    """Print how many melodies share their recording with another melody."""
+    same_rec = groups[:, None] == groups[None, :]
+    np.fill_diagonal(same_rec, False)
+    n_queries = same_rec.any(axis=1).sum()
+    n_pairs = same_rec.sum() // 2
+    same_fam = (same_rec & (labels[:, None] == labels[None, :])).sum() // 2
+    print(f"Queries with sibling strophes: {n_queries} | "
+          f"sibling pairs: {n_pairs} (same family: {same_fam})")
 
 
 def plot_heatmap(sim, labels, method, out_path):
@@ -135,6 +163,8 @@ def main():
     parser.add_argument("--sim", required=True, help="results/<method>.npz")
     parser.add_argument("--mtc_root", default="data/MTC-ANN-2.0.1")
     parser.add_argument("--out_dir", default="results/figures")
+    parser.add_argument("--exclude_same_recording", action="store_true",
+                        help="Ignore results from the query's own recording (same NLB number)")
     args = parser.parse_args()
 
     method = Path(args.sim).stem
@@ -155,7 +185,13 @@ def main():
     ids = [i for i, k in zip(ids, keep) if k]
     labels = np.array([families[i] for i in ids])
 
-    ap = average_precision(sim, labels)
+    groups = None
+    if args.exclude_same_recording:
+        groups = np.array([recording_id(i) for i in ids])
+        report_same_recording(ids, labels, groups)
+        method += "_norec"
+
+    ap = average_precision(sim, labels, groups)
     print(f"{method}: {len(ids)} melodies, {len(np.unique(labels))} families")
     print(f"MAP = {np.nanmean(ap):.4f}")
 
