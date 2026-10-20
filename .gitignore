@@ -2,12 +2,15 @@
 data/*
 !data/.gitkeep
 
-# Generated outputs
+# Generated outputs (but keep the final results)
 results/*
 !results/.gitkeep
+!results/*.npz
+!results/figures/
+results/figures/*
+!results/figures/*_ap.csv
 *.pkl
 *.npy
-*.npz
 
 # CLaMP 2 code, weights and features
 clamp2/
