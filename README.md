@@ -38,7 +38,7 @@ melody-similarity/
 | Representations | Elias | Pitch / interval / contour sequences, with and without durations |
 | Distance measures | Elias | Edit distance, DTW, n-gram overlap and similarity matrices for all combinations |
 | CLaMP 2 | Lucas | Embeddings for all melodies, cosine similarity matrix |
-| Evaluation | TBD | MAP, results table and figures |
+| Evaluation | Fabian | MAP, results table and figures |
 
 ## Shared formats
 
