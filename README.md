@@ -118,9 +118,3 @@ It is recommended to use a virtual environment. From the repo root:
 1. Clone https://github.com/sanderwood/clamp2 into `clamp2/` in the repo root (ignored by git)
 2. Download the CLaMP 2 and M3 weights from https://huggingface.co/sander-wood/clamp2 into `clamp2/code/`
 3. Convert MIDI to MTF with `clamp2/process_data/batch_midi2mtf.py`, then extract features with `clamp2/code/extract_clamp2.py <mtf_dir> <output_dir> --normalize`
-
-## Workflow
-
-- Work on your own branch (e.g. `representations`, `data-loading`, `clamp2`) and merge into `main` when a piece works.
-- Never commit data, model weights or large result files (see `.gitignore`).
-- Keep this README up to date if anything changes.
