@@ -42,9 +42,6 @@ melody-similarity/
 
 ## Shared formats
 
-Everyone codes against these, so the parts can be built in parallel.
-If you need to change a format, update this section and tell the group.
-
 ### Pipeline
 
     data_loading.py      →  melodies, families
