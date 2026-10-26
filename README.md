@@ -2,6 +2,8 @@
 
 DT2470 Music Informatics, KTH, group project (autumn 2026).
 
+Read the project report [here](report.ipynb).
+
 ## What we do
 
 We compare methods for measuring how similar two melodies are, a core problem in MIR tasks such as plagiarism detection. We test:
